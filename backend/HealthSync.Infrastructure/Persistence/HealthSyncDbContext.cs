@@ -1,9 +1,10 @@
+using HealthSync.Domain.Interfaces;
 using HealthSync.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthSync.Infrastructure.Persistence;
 
-public class HealthSyncDbContext : DbContext
+public class HealthSyncDbContext : DbContext, IApplicationDbContext
 {
     public HealthSyncDbContext(DbContextOptions<HealthSyncDbContext> options)
         : base(options)
@@ -21,6 +22,32 @@ public class HealthSyncDbContext : DbContext
     public DbSet<FoodEntry> FoodEntries { get; set; }
     public DbSet<FoodItem> FoodItems { get; set; }
 
+    IQueryable<ApplicationUser> IApplicationDbContext.ApplicationUsers => ApplicationUsers;
+    IQueryable<UserProfile> IApplicationDbContext.UserProfiles => UserProfiles;
+    IQueryable<Goal> IApplicationDbContext.Goals => Goals;
+    IQueryable<ProgressRecord> IApplicationDbContext.ProgressRecords => ProgressRecords;
+    IQueryable<WorkoutLog> IApplicationDbContext.WorkoutLogs => WorkoutLogs;
+    IQueryable<ExerciseSession> IApplicationDbContext.ExerciseSessions => ExerciseSessions;
+    IQueryable<Exercise> IApplicationDbContext.Exercises => Exercises;
+    IQueryable<NutritionLog> IApplicationDbContext.NutritionLogs => NutritionLogs;
+    IQueryable<FoodEntry> IApplicationDbContext.FoodEntries => FoodEntries;
+    IQueryable<FoodItem> IApplicationDbContext.FoodItems => FoodItems;
+
+    void IApplicationDbContext.Add<T>(T entity)
+    {
+        Add(entity);
+    }
+
+    void IApplicationDbContext.Update<T>(T entity)
+    {
+        Update(entity);
+    }
+
+    void IApplicationDbContext.Remove<T>(T entity)
+    {
+        Remove(entity);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -34,7 +61,8 @@ public class HealthSyncDbContext : DbContext
             entity.HasKey(e => e.UserId);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.Role).IsRequired();
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
         });
 
         // --- UserProfile (One-to-One with ApplicationUser) ---
@@ -42,9 +70,11 @@ public class HealthSyncDbContext : DbContext
         {
             entity.HasKey(e => e.UserId); // PK is also the FK
             entity.HasOne(e => e.User)
-                .WithOne(u => u.UserProfile)
+                .WithOne(u => u.Profile)
                 .HasForeignKey<UserProfile>(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.HeightCm).HasPrecision(5, 2);
+            entity.Property(e => e.WeightKg).HasPrecision(5, 2);
         });
 
         // --- WorkoutLog (Many-to-One with ApplicationUser) ---
@@ -63,10 +93,14 @@ public class HealthSyncDbContext : DbContext
             entity.HasKey(e => e.ExerciseSessionId);
             entity.HasOne(e => e.WorkoutLog)
                 .WithMany(wl => wl.ExerciseSessions)
-                .HasForeignKey(e => e.WorkoutLogId);
+                .HasForeignKey(e => e.WorkoutLogId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Exercise)
                 .WithMany(ex => ex.ExerciseSessions)
-                .HasForeignKey(e => e.ExerciseId);
+                .HasForeignKey(e => e.ExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.WeightKg).HasPrecision(5, 2);
+            entity.Property(e => e.Rpe).HasPrecision(4, 2);
         });
 
         // --- Exercise ---
@@ -85,6 +119,10 @@ public class HealthSyncDbContext : DbContext
                 .WithMany(u => u.NutritionLogs)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.TotalCalories).HasPrecision(8, 2);
+            entity.Property(e => e.ProteinG).HasPrecision(8, 2);
+            entity.Property(e => e.CarbsG).HasPrecision(8, 2);
+            entity.Property(e => e.FatG).HasPrecision(8, 2);
         });
 
         // --- FoodEntry (Many-to-Many between NutritionLog and FoodItem) ---
@@ -93,10 +131,17 @@ public class HealthSyncDbContext : DbContext
             entity.HasKey(e => e.FoodEntryId);
             entity.HasOne(e => e.NutritionLog)
                 .WithMany(nl => nl.FoodEntries)
-                .HasForeignKey(e => e.NutritionLogId);
+                .HasForeignKey(e => e.NutritionLogId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.FoodItem)
                 .WithMany(fi => fi.FoodEntries)
-                .HasForeignKey(e => e.FoodItemId);
+                .HasForeignKey(e => e.FoodItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Quantity).HasPrecision(8, 2);
+            entity.Property(e => e.CaloriesKcal).HasPrecision(8, 2);
+            entity.Property(e => e.ProteinG).HasPrecision(8, 2);
+            entity.Property(e => e.CarbsG).HasPrecision(8, 2);
+            entity.Property(e => e.FatG).HasPrecision(8, 2);
         });
 
         // --- FoodItem ---
@@ -105,6 +150,11 @@ public class HealthSyncDbContext : DbContext
             entity.HasKey(e => e.FoodItemId);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.ServingSize).HasPrecision(8, 2);
+            entity.Property(e => e.CaloriesKcal).HasPrecision(8, 2);
+            entity.Property(e => e.ProteinG).HasPrecision(8, 2);
+            entity.Property(e => e.CarbsG).HasPrecision(8, 2);
+            entity.Property(e => e.FatG).HasPrecision(8, 2);
         });
 
         // --- Goal (Many-to-One with ApplicationUser) ---
@@ -115,6 +165,7 @@ public class HealthSyncDbContext : DbContext
                 .WithMany(u => u.Goals)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.TargetValue).HasPrecision(8, 2);
         });
 
         // --- ProgressRecord (Many-to-One with Goal) ---
@@ -125,6 +176,53 @@ public class HealthSyncDbContext : DbContext
                 .WithMany(g => g.ProgressRecords)
                 .HasForeignKey(e => e.GoalId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Value).HasPrecision(8, 2);
+            entity.Property(e => e.WeightKg).HasPrecision(5, 2);
+            entity.Property(e => e.WaistCm).HasPrecision(5, 2);
         });
+
+        // Seed data for FoodItems
+        modelBuilder.Entity<FoodItem>().HasData(
+            new FoodItem { FoodItemId = 1, Name = "Chicken Breast", ServingSize = 100, ServingUnit = "g", CaloriesKcal = 165, ProteinG = 31, CarbsG = 0, FatG = 3.6m },
+            new FoodItem { FoodItemId = 2, Name = "Brown Rice", ServingSize = 100, ServingUnit = "g", CaloriesKcal = 111, ProteinG = 2.6m, CarbsG = 23, FatG = 0.9m },
+            new FoodItem { FoodItemId = 3, Name = "Banana", ServingSize = 118, ServingUnit = "g", CaloriesKcal = 105, ProteinG = 1.3m, CarbsG = 27, FatG = 0.4m },
+            new FoodItem { FoodItemId = 4, Name = "Greek Yogurt", ServingSize = 170, ServingUnit = "g", CaloriesKcal = 100, ProteinG = 17, CarbsG = 6, FatG = 0 },
+            new FoodItem { FoodItemId = 5, Name = "Spinach", ServingSize = 30, ServingUnit = "g", CaloriesKcal = 7, ProteinG = 0.9m, CarbsG = 1.1m, FatG = 0.1m },
+            new FoodItem { FoodItemId = 6, Name = "Salmon", ServingSize = 100, ServingUnit = "g", CaloriesKcal = 208, ProteinG = 20, CarbsG = 0, FatG = 13m },
+            new FoodItem { FoodItemId = 7, Name = "Sweet Potato", ServingSize = 130, ServingUnit = "g", CaloriesKcal = 112, ProteinG = 2.1m, CarbsG = 26, FatG = 0.1m },
+            new FoodItem { FoodItemId = 8, Name = "Eggs", ServingSize = 50, ServingUnit = "g", CaloriesKcal = 72, ProteinG = 6.3m, CarbsG = 0.4m, FatG = 4.8m },
+            new FoodItem { FoodItemId = 9, Name = "Oatmeal", ServingSize = 40, ServingUnit = "g", CaloriesKcal = 150, ProteinG = 5.3m, CarbsG = 27, FatG = 2.8m },
+            new FoodItem { FoodItemId = 10, Name = "Broccoli", ServingSize = 91, ServingUnit = "g", CaloriesKcal = 31, ProteinG = 2.5m, CarbsG = 6, FatG = 0.3m }
+        );
+
+        // Seed data for Exercises
+        modelBuilder.Entity<Exercise>().HasData(
+            // Chest Exercises
+            new Exercise { ExerciseId = 1, Name = "Push-ups", MuscleGroup = "Chest", Difficulty = "Beginner", Equipment = "None", Description = "Classic bodyweight chest exercise" },
+            new Exercise { ExerciseId = 2, Name = "Bench Press", MuscleGroup = "Chest", Difficulty = "Intermediate", Equipment = "Barbell", Description = "Compound chest exercise with barbell" },
+            new Exercise { ExerciseId = 3, Name = "Dumbbell Fly", MuscleGroup = "Chest", Difficulty = "Intermediate", Equipment = "Dumbbells", Description = "Isolation exercise for chest" },
+            
+            // Back Exercises
+            new Exercise { ExerciseId = 4, Name = "Pull-ups", MuscleGroup = "Back", Difficulty = "Intermediate", Equipment = "Pull-up Bar", Description = "Bodyweight back exercise" },
+            new Exercise { ExerciseId = 5, Name = "Deadlift", MuscleGroup = "Back", Difficulty = "Advanced", Equipment = "Barbell", Description = "Compound full-body exercise" },
+            new Exercise { ExerciseId = 6, Name = "Bent-over Row", MuscleGroup = "Back", Difficulty = "Intermediate", Equipment = "Barbell", Description = "Compound back exercise" },
+            
+            // Legs Exercises
+            new Exercise { ExerciseId = 7, Name = "Squats", MuscleGroup = "Legs", Difficulty = "Beginner", Equipment = "None", Description = "Fundamental leg exercise" },
+            new Exercise { ExerciseId = 8, Name = "Lunges", MuscleGroup = "Legs", Difficulty = "Beginner", Equipment = "None", Description = "Unilateral leg exercise" },
+            new Exercise { ExerciseId = 9, Name = "Leg Press", MuscleGroup = "Legs", Difficulty = "Intermediate", Equipment = "Machine", Description = "Machine-based leg exercise" },
+            
+            // Shoulders Exercises
+            new Exercise { ExerciseId = 10, Name = "Shoulder Press", MuscleGroup = "Shoulders", Difficulty = "Intermediate", Equipment = "Dumbbells", Description = "Overhead pressing movement" },
+            new Exercise { ExerciseId = 11, Name = "Lateral Raise", MuscleGroup = "Shoulders", Difficulty = "Beginner", Equipment = "Dumbbells", Description = "Isolation shoulder exercise" },
+            
+            // Arms Exercises
+            new Exercise { ExerciseId = 12, Name = "Bicep Curls", MuscleGroup = "Arms", Difficulty = "Beginner", Equipment = "Dumbbells", Description = "Isolation bicep exercise" },
+            new Exercise { ExerciseId = 13, Name = "Tricep Dips", MuscleGroup = "Arms", Difficulty = "Intermediate", Equipment = "Parallel Bars", Description = "Bodyweight tricep exercise" },
+            
+            // Core Exercises
+            new Exercise { ExerciseId = 14, Name = "Plank", MuscleGroup = "Core", Difficulty = "Beginner", Equipment = "None", Description = "Isometric core exercise" },
+            new Exercise { ExerciseId = 15, Name = "Crunches", MuscleGroup = "Core", Difficulty = "Beginner", Equipment = "None", Description = "Basic abdominal exercise" }
+        );
     }
 }

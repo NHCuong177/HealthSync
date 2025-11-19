@@ -8,20 +8,15 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
     public RegisterUserCommandValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required")
-            .EmailAddress().WithMessage("Invalid email format");
+            .NotEmpty().WithMessage("Email là bắt buộc")
+            .EmailAddress().WithMessage("Định dạng email không hợp lệ");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+            .NotEmpty().WithMessage("Mật khẩu là bắt buộc")
+            .MinimumLength(8).WithMessage("Mật khẩu phải có ít nhất 8 ký tự");
 
-        RuleFor(x => x.FullName)
-            .NotEmpty().WithMessage("Full name is required");
-
-        RuleFor(x => x.HeightCm)
-            .GreaterThan(0).WithMessage("Height must be greater than 0");
-
-        RuleFor(x => x.WeightKg)
-            .GreaterThan(0).WithMessage("Weight must be greater than 0");
+        RuleFor(x => x.VerificationCode)
+            .NotEmpty().WithMessage("Mã xác thực là bắt buộc")
+            .Length(6).WithMessage("Mã xác thực phải có 6 ký tự");
     }
 }

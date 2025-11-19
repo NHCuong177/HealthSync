@@ -1,0 +1,46 @@
+/* Force light mode + CSS variables */
+:root {
+  color-scheme: light;
+  --theme-bg: #d9d7b6;
+  --theme-paper: #fffef8;
+  --theme-ink: #1e201e;
+  --theme-muted: #6b6f76;
+  --theme-accent: #1b8f5a;
+  --theme-stroke: #cfcbb1;
+}
+
+/* Base reset */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Để component tự quyết nền */
+  background: transparent;
+  color: var(--theme-ink);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* (Giữ link style nhẹ) */
+a { color: var(--theme-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --- Scope form styles vào card login để không ảnh hưởng trang khác --- */
+.hs-form input,
+.hs-form textarea,
+.hs-form select,
+.hs-form button {
+  background-color: var(--theme-paper);
+  color: var(--theme-ink);
+  border: 1px solid var(--theme-stroke);
+}
+
+.hs-form input::placeholder,
+.hs-form textarea::placeholder { color: var(--theme-muted); }
+
+/* Fix autofill chỉ trong form */
+.hs-form input:-webkit-autofill,
+.hs-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--theme-ink);
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px var(--theme-paper) inset;
+}
