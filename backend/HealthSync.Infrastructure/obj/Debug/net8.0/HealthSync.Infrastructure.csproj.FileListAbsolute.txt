@@ -56,3 +56,5 @@ C:\Users\popop\Desktop\Trash\HealthSync\backend\HealthSync.Infrastructure\obj\De
 C:\Users\popop\Desktop\Trash\HealthSync\backend\HealthSync.Infrastructure\obj\Debug\net8.0\HealthSync.Infrastructure.pdb
 C:\Users\popop\Desktop\Trash\HealthSync\backend\HealthSync.Infrastructure\obj\Debug\net8.0\HealthSync.Infrastructure.genruntimeconfig.cache
 C:\Users\popop\Desktop\Trash\HealthSync\backend\HealthSync.Infrastructure\obj\Debug\net8.0\ref\HealthSync.Infrastructure.dll
+C:\Users\Admin\Documents\projectmanager\HealthSync\backend\HealthSync.Infrastructure\bin\Debug\net8.0\HealthSync.Infrastructure.runtimeconfig.json
+C:\Users\Admin\Documents\projectmanager\HealthSync\backend\HealthSync.Infrastructure\obj\Debug\net8.0\HealthSync.Infrastructure.genruntimeconfig.cache

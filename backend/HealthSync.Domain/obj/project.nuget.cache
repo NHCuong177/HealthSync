@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qhKnF6xQCUk=",
+  "dgSpecHash": "BaYKzUhzLMo=",
   "success": true,
   "projectFilePath": "C:\\Users\\Admin\\Documents\\projectmanager\\HealthSync\\backend\\HealthSync.Domain\\HealthSync.Domain.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.22\\microsoft.netcore.app.ref.8.0.22.nupkg.sha512",
-    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.22\\microsoft.windowsdesktop.app.ref.8.0.22.nupkg.sha512",
-    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.22\\microsoft.aspnetcore.app.ref.8.0.22.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }
